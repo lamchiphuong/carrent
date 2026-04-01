@@ -615,19 +615,31 @@
     }
 
     function getDayType(d) {
-      const day = new Date(d).getDay();
+      const day = new Date(d).getDay();   // 0 = CN, 6 = T7
       return (day === 0 || day === 6) ? "weekend" : "normal";
     }
 
+    // ==================== SỬA LOGIC TÍNH TIỀN Ở ĐÂY ====================
     function calculateRentalTotal(contract) {
       const car = getCarByPlate(contract.plate);
       if (!car) return 0;
+
       let total = 0;
       let cur = new Date(contract.rentDate);
       const end = new Date(contract.returnDate);
+
       while (cur <= end) {
         const ds = cur.toISOString().split('T')[0];
-        const price = isHoliday(ds) ? car.holiday : (getDayType(ds) === "weekend" ? car.weekend : car.daily);
+
+        let price;
+        if (isHoliday(ds)) {
+          price = car.holiday;                    // Ưu tiên giá ngày lễ
+        } else if (getDayType(ds) === "weekend") {
+          price = car.weekend;
+        } else {
+          price = car.daily;
+        }
+
         total += price;
         cur.setDate(cur.getDate() + 1);
       }
@@ -650,7 +662,7 @@
       return Math.ceil((new Date(ret) - new Date(rent)) / 86400000) + 1;
     }
 
-    // ====================== XÁC NHẬN NHẬN XE ======================
+    // ====================== XÁC NHẬN ======================
     function confirmReceive(id) {
       const contract = contracts.find(c => c.id === id);
       if (!contract) return;
@@ -1025,13 +1037,11 @@
       await loadData();
       renderAll();
 
-      // Format money input
       ['dailyPrice','weekendPrice','holidayPrice','deposit'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', formatPriceInput);
       });
 
-      // Event cho confirm modal
       document.getElementById('confirmCancelBtn').addEventListener('click', () => {
         if (currentConfirmCallback) currentConfirmCallback(false);
         closeConfirmModal();
@@ -1042,7 +1052,7 @@
         closeConfirmModal();
       });
 
-      console.log("🚀 CarRent đã khởi động thành công");
+      console.log("🚀 CarRent đã khởi động thành công - Logic giá lễ đã sửa");
     };
   </script>
 </body>
