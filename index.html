@@ -972,7 +972,7 @@
 
       document.getElementById('detailDate').textContent = formatDate(dateStr);
 
-      let html = `<p style="color:#64748b; margin-bottom:15px;">Có ${dayContracts.length} hợp đồng bao phủ ngày này:</p>`;
+      let html = `<p style="color:#64748b; margin-bottom:15px;">Có ${dayContracts.length} hợp đồng thuê xe trong ngày này:</p>`;
       dayContracts.forEach(con => {
         const total = calculateTotal(con);
         html += `
