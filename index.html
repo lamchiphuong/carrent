@@ -230,7 +230,57 @@
       margin-top: 3px;
     }
 
-    /* Toast - Giữ nguyên style gốc */
+    /* ==================== PHẦN CSS BỔ SUNG TỪ TEST APP (ĐÃ COMBINE) ==================== */
+    .confirm-icon { font-size: 3.5rem; margin-bottom: 15px; text-align: center; }
+    .confirm-title { font-size: 1.5rem; margin-bottom: 12px; text-align: center; }
+    .confirm-message { text-align: center; color: #475569; line-height: 1.6; margin-bottom: 25px; font-size: 1rem; }
+    .confirm-buttons { display: flex; gap: 12px; }
+    .confirm-buttons button { flex: 1; padding: 14px; font-size: 1.05rem; border-radius: 12px; }
+
+    .calendar-modal .modal-content { max-width: 720px; }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-top: 10px;
+    }
+    .calendar-header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 8px;
+    }
+    .day {
+      aspect-ratio: 1/1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 0.92rem;
+    }
+    .day.other-month { color: #94a3b8; }
+    .day.booked { background: #fee2e2; color: #b91c1c; font-weight: 700; }
+    .day.today { border: 2px solid var(--primary); }
+
+    .extra-fee-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 12px;
+    }
+
+    .money-input {
+      text-align: right;
+      font-weight: 600;
+    }
+
+    /* Toast - Giữ nguyên style gốc của new THUÊ XE.html */
     #toast {
       display: none;
       position: fixed;
@@ -310,7 +360,7 @@
       </div>
     </div>
 
-    <!-- Tab 1 và Tab 2 giữ nguyên -->
+    <!-- Tab 1 -->
     <div id="tab1" class="card" style="display: none;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2><i class="fas fa-car-side"></i> Danh sách xe</h2>
@@ -337,6 +387,7 @@
       </div>
     </div>
 
+    <!-- Tab 2 -->
     <div id="tab2" class="card" style="display: none;">
       <h2><i class="fas fa-history"></i> Lịch sử hợp đồng đã hoàn tất</h2>
       <div style="background:#f0fdf4; border-radius:16px; padding:20px; margin-bottom:25px; display:flex; justify-content:space-between; align-items:center;">
@@ -465,7 +516,7 @@
     </div>
   </div>
 
-  <!-- Modal xác nhận và lịch giữ nguyên từ code gốc -->
+  <!-- Modal xác nhận -->
   <div id="confirmModal" class="modal">
     <div class="modal-content">
       <div class="modal-header" style="justify-content: center; flex-direction: column; text-align: center;">
@@ -481,6 +532,7 @@
     </div>
   </div>
 
+  <!-- Modal xác nhận đơn giản -->
   <div id="simpleConfirmModal" class="modal">
     <div class="modal-content" style="max-width: 480px;">
       <div class="modal-header" style="justify-content: center; text-align: center;">
@@ -495,6 +547,7 @@
     </div>
   </div>
 
+  <!-- Modal Lịch xe -->
   <div id="scheduleModal" class="modal calendar-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -519,7 +572,7 @@
     </div>
   </div>
 
-  <!-- Toast - Đúng như code gốc của cậu -->
+  <!-- Toast -->
   <div id="toast" class="toast">
     <i class="fas fa-check-circle"></i>
     <span id="toastMessage"></span>
@@ -775,7 +828,7 @@
       });
     }
 
-    // Calendar functions (giữ nguyên)
+    // ====================== LỊCH XE ======================
     function renderCalendar(carId) {
       currentScheduleCarId = carId;
       const booked = new Set();
@@ -1169,7 +1222,7 @@
         closeSimpleConfirmModal();
       });
 
-      console.log("🚀 CarRent đã khôi phục toast và toast style gốc");
+      console.log("🚀 CarRent đã được sửa hoàn chỉnh - Lịch xe và tất cả modal hoạt động tốt");
     };
   </script>
 </body>
