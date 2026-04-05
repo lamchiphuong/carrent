@@ -406,7 +406,7 @@
       </div>
     </div>
 
-    <!-- Tab 2 - ĐÃ CHỈNH: Mặc định tháng hiện tại + Freeze toàn bộ lịch sử -->
+    <!-- Tab 2 -->
     <div id="tab2" class="card" style="display: none;">
       <h2><i class="fas fa-history"></i> Lịch sử hợp đồng & Doanh thu theo tháng / xe</h2>
       
@@ -920,7 +920,7 @@
     }
 
     function confirmReturn(id) {
-      showConfirm("Xác nhận trả xe", "Bạn chắc chắn khách đã trả xe?<br><strong>Toàn bộ thông tin sẽ được ghi nhận vĩnh viễn, không thay đổi được sau này.</strong>", "🔄", () => {
+      showConfirm("Xác nhận trả xe", "Bạn chắc chắn khách đã trả xe?<br><strong>Toàn bộ thông tin sẽ được ghi nhận vĩnh viễn.</strong>", "🔄", () => {
         const contract = contracts.find(c => c.id === id);
         if (contract) {
           freezeContract(contract);
@@ -928,7 +928,7 @@
         }
         renderAll();
         saveData();
-        showToast("Hợp đồng đã hoàn tất và được lưu vĩnh viễn!");
+        showToast("Hợp đồng đã hoàn tất và được freeze vĩnh viễn!");
       });
     }
 
@@ -961,7 +961,7 @@
       });
     }
 
-    // ====================== LỊCH XE + CHI TIẾT NGÀY BẬN (giữ nguyên) ======================
+    // ====================== LỊCH XE + XEM HỢP ĐỒNG TRONG NGÀY BẬN (ĐÃ SỬA) ======================
     function renderCalendar(carId) {
       currentScheduleCarId = carId;
       const booked = new Set();
@@ -1031,11 +1031,13 @@
         new Date(dateStr) <= new Date(c.returnDate)
       );
 
+      if (dayContracts.length === 0) return;
+
       document.getElementById('detailDate').textContent = formatDate(dateStr);
 
       let html = `<p style="color:#64748b; margin-bottom:15px;">Có ${dayContracts.length} hợp đồng thuê xe trong ngày này:</p>`;
       dayContracts.forEach(con => {
-        const total = getContractRevenue(con);
+        const total = calculateTotal(con);   // Dùng calculateTotal cho hợp đồng đang xử lý
         html += `
           <div style="border:2px solid #fee2e2; background:#fff1f2; border-radius:16px; padding:18px; margin-bottom:18px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -1201,7 +1203,7 @@
       });
     }
 
-    // ====================== FILTER DOANH THU (Mặc định tháng hiện tại) ======================
+    // ====================== DOANH THU ======================
     function populateRevenueFilters() {
       const years = new Set();
       contracts.forEach(c => {
@@ -1326,7 +1328,7 @@
           </style>
         </head>
         <body>
-          <h1>🚗 BÁO CÁO DOANH THU CARRENT</h1>
+          <h1>BÁO CÁO DOANH THU - ỨNG DỤNG CARRENT</h1>
           <h2>${document.getElementById('revenueTitle').textContent}</h2>
           <div class="total">Tổng doanh thu: ${document.getElementById('totalRevenue').textContent}</div>
           <table>
@@ -1526,7 +1528,7 @@
     window.onload = async () => {
       await loadData();
 
-      // Freeze toàn bộ lịch sử hợp đồng cũ
+      // Freeze toàn bộ lịch sử hợp đồng cũ nếu chưa có
       let migrated = false;
       contracts.forEach(c => {
         if (c.status === "Đã hoàn tất" && !c.frozenData) {
@@ -1571,7 +1573,7 @@
         closeSimpleConfirmModal();
       });
 
-      console.log("🚀 CarRent hoàn chỉnh - Freeze toàn bộ lịch sử + mặc định tháng hiện tại");
+      console.log("🚀 CarRent hoàn chỉnh - Đã khôi phục đầy đủ tính năng xem hợp đồng trong lịch");
     };
   </script>
 </body>
