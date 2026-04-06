@@ -578,10 +578,10 @@
     </div>
   </div>
 
-  <!-- FAB Thêm hợp đồng -->
+  <!-- FAB -->
   <div class="fab" onclick="showAddContractModal()"><i class="fas fa-plus"></i></div>
 
-  <!-- Nút Refresh & Home -->
+  <!-- Action buttons -->
   <div class="action-buttons">
     <div class="action-btn" onclick="refreshApp()" title="Làm mới trang"><i class="fas fa-sync-alt"></i></div>
     <div class="action-btn" onclick="goHome()" title="Về trang chính"><i class="fas fa-home"></i></div>
@@ -609,22 +609,10 @@
         <input type="tel" id="phone" placeholder="Số điện thoại" required>
 
         <div class="form-grid">
-          <div>
-            <label>Ngày bắt đầu thuê</label>
-            <input type="date" id="rentDate" required>
-          </div>
-          <div>
-            <label>Thời gian nhận xe <small style="color:#64748b;">(24h)</small></label>
-            <input type="time" id="rentTime" value="08:00">
-          </div>
-          <div>
-            <label>Ngày trả xe</label>
-            <input type="date" id="returnDate" required>
-          </div>
-          <div>
-            <label>Thời gian trả xe <small style="color:#64748b;">(24h)</small></label>
-            <input type="time" id="returnTime" value="18:00">
-          </div>
+          <div><label>Ngày bắt đầu thuê</label><input type="date" id="rentDate" required></div>
+          <div><label>Thời gian nhận xe </label><input type="time" id="rentTime" value="08:00"></div>
+          <div><label>Ngày trả xe</label><input type="date" id="returnDate" required></div>
+          <div><label>Thời gian trả xe </label><input type="time" id="returnTime" value="20:00"></div>
         </div>
 
         <div style="margin-bottom: 20px;">
@@ -635,9 +623,10 @@
           </select>
         </div>
 
+        <!-- GIÁ TỔNG CHO ĐẶT QUA APP -->
         <div class="custom-price" id="customPriceSection">
-          <label>Giá thuê tuỳ chỉnh (VNĐ/ngày) <small style="color:#16a34a;">(chỉ áp dụng cho Đặt qua app)</small></label>
-          <input type="text" id="customDailyPrice" class="money-input" inputmode="numeric" pattern="[0-9\s]*" placeholder="Ví dụ: 450000">
+          <label>Giá tổng thuê xe (VNĐ) <small style="color:#16a34a;">(cho Đặt qua app)</small></label>
+          <input type="text" id="customTotalPrice" class="money-input" inputmode="numeric" pattern="[0-9\s]*" placeholder="Ví dụ: 1200000">
         </div>
 
         <div style="margin: 20px 0 10px 0;">
@@ -677,7 +666,7 @@
     </div>
   </div>
 
-  <!-- Modal Ghi chú nhanh (hợp đồng đang xử lý) -->
+  <!-- Modal Ghi chú đang xử lý -->
   <div id="noteModal" class="modal">
     <div class="modal-content" style="max-width: 500px;">
       <div class="modal-header">
@@ -693,7 +682,7 @@
     </div>
   </div>
 
-  <!-- Modal Ghi chú lịch sử (hợp đồng đã hoàn tất) -->
+  <!-- Modal Ghi chú lịch sử -->
   <div id="historyNoteModal" class="modal">
     <div class="modal-content" style="max-width: 500px;">
       <div class="modal-header">
@@ -815,9 +804,8 @@
     <span id="toastMessage"></span>
   </div>
 
-  <!-- Version -->
   <div class="version">
-    CarRent v1.4.0
+    CarRent v1.2.4
   </div>
 
   <script>
@@ -908,12 +896,15 @@
       return (day === 0 || day === 6) ? "weekend" : "normal";
     }
 
+    // ====================== TÍNH TIỀN - ĐÃ SỬA ======================
     function calculateRentalTotal(contract) {
       const car = getCarByPlate(contract.plate);
       if (!car) return 0;
-      if (contract.contractType === 'app' && contract.customDailyPrice) {
-        return contract.customDailyPrice * calculateDays(contract.rentDate, contract.returnDate);
+
+      if (contract.contractType === 'app' && contract.customTotalPrice) {
+        return parseMoney(contract.customTotalPrice);
       }
+
       let total = 0;
       let cur = new Date(contract.rentDate);
       const end = new Date(contract.returnDate);
@@ -958,14 +949,11 @@
         discount: contract.discount || 0,
         extraFees: JSON.parse(JSON.stringify(contract.extraFees || [])),
         contractType: contract.contractType || 'normal',
-        customDailyPrice: contract.customDailyPrice,
+        customTotalPrice: contract.customTotalPrice,
         rentalAmount: calculateRentalTotal(contract),
         totalAmount: calculateTotal(contract)
       };
-      // Chuyển ghi chú đang xử lý sang ghi chú lịch sử
-      if (contract.activeNote) {
-        contract.historyNote = contract.activeNote;
-      }
+      if (contract.activeNote) contract.historyNote = contract.activeNote;
     }
 
     function getCompletedDisplay(con) {
@@ -984,37 +972,10 @@
         discount: con.discount || 0,
         extraFees: con.extraFees || [],
         contractType: con.contractType || 'normal',
-        customDailyPrice: con.customDailyPrice,
+        customTotalPrice: con.customTotalPrice,
         rentalAmount: calculateRentalTotal(con),
         totalAmount: calculateTotal(con)
       };
-    }
-
-    function showConfirm(title, message, icon, callback) {
-      document.getElementById('confirmTitle').textContent = title;
-      document.getElementById('confirmMessage').innerHTML = message;
-      document.getElementById('confirmIcon').innerHTML = icon;
-      currentConfirmCallback = callback;
-      document.getElementById('confirmModal').style.display = 'flex';
-    }
-    function closeConfirmModal() { document.getElementById('confirmModal').style.display = 'none'; }
-
-    function showSimpleConfirm(title, message, callback) {
-      document.getElementById('simpleConfirmTitle').textContent = title;
-      document.getElementById('simpleConfirmMessage').innerHTML = message;
-      currentSimpleConfirmCallback = callback;
-      document.getElementById('simpleConfirmModal').style.display = 'flex';
-    }
-    function closeSimpleConfirmModal() { document.getElementById('simpleConfirmModal').style.display = 'none'; }
-
-    function formatPriceInput(e) {
-      let value = e.target.value.replace(/[^0-9]/g, '');
-      let formatted = '';
-      for (let i = 0; i < value.length; i++) {
-        if (i > 0 && (value.length - i) % 3 === 0) formatted += ' ';
-        formatted += value[i];
-      }
-      e.target.value = formatted;
     }
 
     // ====================== CONTRACT TYPE ======================
@@ -1036,10 +997,6 @@
       document.getElementById('noteModal').style.display = 'flex';
     }
 
-    function closeNoteModal() {
-      document.getElementById('noteModal').style.display = 'none';
-    }
-
     function saveActiveNote() {
       const id = parseInt(document.getElementById('noteContractId').value);
       const contract = contracts.find(c => c.id === id);
@@ -1052,6 +1009,10 @@
       closeNoteModal();
     }
 
+    function closeNoteModal() {
+      document.getElementById('noteModal').style.display = 'none';
+    }
+
     function openHistoryNoteModal(id) {
       const contract = contracts.find(c => c.id === id);
       if (!contract) return;
@@ -1059,10 +1020,6 @@
       document.getElementById('historyNoteText').value = contract.historyNote || '';
       document.getElementById('historyNoteModalTitle').textContent = `Ghi chú lịch sử - ${contract.customer || (contract.frozenData ? contract.frozenData.customer : '')}`;
       document.getElementById('historyNoteModal').style.display = 'flex';
-    }
-
-    function closeHistoryNoteModal() {
-      document.getElementById('historyNoteModal').style.display = 'none';
     }
 
     function saveHistoryNote() {
@@ -1077,7 +1034,11 @@
       closeHistoryNoteModal();
     }
 
-    // ====================== LỊCH XE ======================
+    function closeHistoryNoteModal() {
+      document.getElementById('historyNoteModal').style.display = 'none';
+    }
+
+    // ====================== LỊCH XE (GIỮ NGUYÊN) ======================
     function renderCalendar(carId) {
       currentScheduleCarId = carId;
       const booked = new Set();
@@ -1610,8 +1571,8 @@
       document.getElementById('discount').value = contract.discount || 0;
       document.getElementById('activeNote').value = contract.activeNote || '';
 
-      if (contract.contractType === 'app' && contract.customDailyPrice) {
-        document.getElementById('customDailyPrice').value = contract.customDailyPrice;
+      if (contract.contractType === 'app' && contract.customTotalPrice) {
+        document.getElementById('customTotalPrice').value = contract.customTotalPrice;
       }
 
       const extraList = document.getElementById('extraFeesList');
@@ -1723,7 +1684,7 @@
       const returnTime = document.getElementById('returnTime').value;
       const rentDayType = document.getElementById('rentDayType').value;
       const discount = parseMoney(document.getElementById('discount').value);
-      const customPrice = parseMoney(document.getElementById('customDailyPrice').value);
+      const customTotalPrice = parseMoney(document.getElementById('customTotalPrice').value);
 
       if (!contractId && isDateOverlap(rent, ret, car.plate)) 
         return alert("Xe đã có lịch trong khoảng thời gian này!");
@@ -1751,7 +1712,7 @@
           contract.extraFees = extraFees;
           contract.status = document.getElementById('status').value;
           contract.contractType = currentContractType;
-          contract.customDailyPrice = (currentContractType === 'app' && customPrice > 0) ? customPrice : null;
+          contract.customTotalPrice = (currentContractType === 'app' && customTotalPrice > 0) ? customTotalPrice : null;
           contract.activeNote = document.getElementById('activeNote').value.trim();
         }
         showToast('Hợp đồng đã được cập nhật!');
@@ -1772,7 +1733,7 @@
           extraFees,
           status: document.getElementById('status').value,
           contractType: currentContractType,
-          customDailyPrice: (currentContractType === 'app' && customPrice > 0) ? customPrice : null,
+          customTotalPrice: (currentContractType === 'app' && customTotalPrice > 0) ? customTotalPrice : null,
           activeNote: document.getElementById('activeNote').value.trim(),
           fullPaymentReceived: false
         });
@@ -1819,6 +1780,12 @@
 
       let migrated = false;
       contracts.forEach(c => {
+        if (c.contractType === 'app') {
+          if (c.customDailyPrice && !c.customTotalPrice) {
+            c.customTotalPrice = c.customDailyPrice * calculateDays(c.rentDate, c.returnDate);
+            migrated = true;
+          }
+        }
         if (c.status === "Đã hoàn tất") {
           if (!c.frozenData) {
             freezeContract(c);
@@ -1834,7 +1801,8 @@
             migrated = true;
           }
         }
-        if (c.note) delete c.note; // Xóa trường cũ
+        if (c.note) delete c.note;
+        if (c.customDailyPrice) delete c.customDailyPrice;
       });
 
       if (migrated) await saveData();
@@ -1856,7 +1824,7 @@
       });
 
       // Format tiền
-      const moneyFields = ['dailyPrice','weekendPrice','holidayPrice','deposit','discount','customDailyPrice'];
+      const moneyFields = ['dailyPrice','weekendPrice','holidayPrice','deposit','discount','customTotalPrice'];
       moneyFields.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -1884,8 +1852,18 @@
         closeSimpleConfirmModal();
       });
 
-      console.log("🚀 CarRent v1.4.0 - Ghi chú đã được tách riêng thành activeNote và historyNote");
+      console.log("🚀 CarRent v1.2.4 - Giá Đặt qua app là giá tổng thuê xe");
     };
+
+    function formatPriceInput(e) {
+      let value = e.target.value.replace(/[^0-9]/g, '');
+      let formatted = '';
+      for (let i = 0; i < value.length; i++) {
+        if (i > 0 && (value.length - i) % 3 === 0) formatted += ' ';
+        formatted += value[i];
+      }
+      e.target.value = formatted;
+    }
   </script>
 </body>
 </html>
