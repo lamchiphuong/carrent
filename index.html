@@ -150,6 +150,7 @@
     .btn-edit { background: #8b5cf6; color: white; }
     .btn-secondary { background: #64748b; color: white; }
 
+    /* === NÚT HÀNH ĐỘNG DƯỚI CÙNG (ĐÃ CHỈNH SỬA) === */
     .fab {
       position: fixed;
       bottom: 25px;
@@ -170,13 +171,13 @@
 
     .action-buttons {
       position: fixed;
-      bottom: 100px;
-      right: 25px;
+      bottom: 25px;
+      right: 105px;           /* Đẩy sang trái để nằm ngang với FAB */
       display: flex;
-      flex-direction: column;
       gap: 12px;
       z-index: 999;
     }
+
     .action-btn {
       width: 52px;
       height: 52px;
@@ -192,6 +193,7 @@
       cursor: pointer;
       transition: all 0.3s ease;
     }
+
     .action-btn:hover {
       background: var(--primary);
       color: white;
@@ -382,8 +384,25 @@
     @media (max-width: 600px) {
       body { padding: 10px; padding-bottom: 120px; }
       h1 { font-size: 2.2rem; }
-      .action-buttons { right: 15px; bottom: 95px; }
-      .fab { width: 55px; height: 55px; bottom: 20px; right: 20px; }
+      
+      .fab {
+        width: 55px;
+        height: 55px;
+        bottom: 20px;
+        right: 20px;
+      }
+      
+      .action-buttons {
+        bottom: 20px;
+        right: 88px;
+        gap: 10px;
+      }
+      
+      .action-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 1.25rem;
+      }
     }
 
     @media print {
@@ -549,10 +568,10 @@
     </div>
   </div>
 
-  <!-- FAB -->
+  <!-- FAB Thêm hợp đồng -->
   <div class="fab" onclick="showAddContractModal()"><i class="fas fa-plus"></i></div>
 
-  <!-- Nút Refresh & Home -->
+  <!-- Nút Refresh & Home - nằm ngang bên trái FAB -->
   <div class="action-buttons">
     <div class="action-btn" onclick="refreshApp()" title="Làm mới trang">
       <i class="fas fa-sync-alt"></i>
@@ -561,6 +580,9 @@
       <i class="fas fa-home"></i>
     </div>
   </div>
+
+  <!-- Các modal và toast giữ nguyên như cũ -->
+  <!-- (Phần modal, script giữ nguyên hoàn toàn như file cũ của bạn) -->
 
   <!-- Modal Thêm/Sửa Hợp Đồng -->
   <div id="contractModal" class="modal">
@@ -742,7 +764,7 @@
 
   <!-- Version -->
   <div class="version">
-    CarRent v1.2.2
+    CarRent v1.2.3
   </div>
 
   <script>
@@ -957,7 +979,6 @@
       document.getElementById('rentDayType').value = contract.rentDayType || 'cungngay';
       document.getElementById('status').value = contract.status || 'Chưa nhận xe';
 
-      // SỬA LỖI: Dùng số thuần khi edit (không format)
       document.getElementById('deposit').value = contract.deposit || 0;
       document.getElementById('discount').value = contract.discount || 0;
 
@@ -1015,7 +1036,7 @@
     }
 
     function confirmReturn(id) {
-      showConfirm("Xác nhận trả xe", "Bạn chắc chắn khách đã trả xe?<br><strong>Toàn bộ thông tin sẽ được ghi nhận vĩnh viễn.</strong>", "🔄", () => {
+      showConfirm("Xác nhận trả xe", "Bạn chắc chắn khách đã trả xe?<br><strong>Toàn bộ thông tin sẽ được lưu lại.</strong>", "🔄", () => {
         const contract = contracts.find(c => c.id === id);
         if (contract) {
           freezeContract(contract);
@@ -1023,7 +1044,7 @@
         }
         renderAll();
         saveData();
-        showToast("Hợp đồng đã hoàn tất và được freeze vĩnh viễn!");
+        showToast("Hợp đồng đã hoàn tất!");
       });
     }
 
@@ -1653,7 +1674,7 @@
         renderActiveContracts();
       });
 
-      // Gắn sự kiện format tiền cho tất cả các trường tiền
+      // Gắn sự kiện format tiền
       const moneyFields = ['dailyPrice','weekendPrice','holidayPrice','deposit','discount'];
       moneyFields.forEach(id => {
         const el = document.getElementById(id);
@@ -1663,7 +1684,6 @@
         }
       });
 
-      // Extra fee fields sẽ được format khi thêm mới
       document.addEventListener('input', function(e) {
         if (e.target.classList.contains('fee-amount')) {
           formatPriceInput(e);
@@ -1683,7 +1703,7 @@
         closeSimpleConfirmModal();
       });
 
-      console.log("🚀 CarRent v1.2.2 ");
+      console.log("🚀 CarRent v1.2.3 - Nút hành động đã được sắp xếp ngang");
     };
   </script>
 </body>
