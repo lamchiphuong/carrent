@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -805,7 +805,7 @@
   </div>
 
   <div class="version">
-    CarRent v1.2.4
+    CarRent v1.2.4 FIXED
   </div>
 
   <script>
@@ -896,7 +896,6 @@
       return (day === 0 || day === 6) ? "weekend" : "normal";
     }
 
-    // ====================== TÍNH TIỀN - ĐÃ SỬA ======================
     function calculateRentalTotal(contract) {
       const car = getCarByPlate(contract.plate);
       if (!car) return 0;
@@ -978,6 +977,30 @@
       };
     }
 
+    // ====================== HÀM XÁC NHẬN (ĐÃ SỬA LỖI) ======================
+    function showConfirm(title, message, icon, callback) {
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmMessage').innerHTML = message;
+      document.getElementById('confirmIcon').innerHTML = icon;
+      currentConfirmCallback = callback;
+      document.getElementById('confirmModal').style.display = 'flex';
+    }
+
+    function closeConfirmModal() {
+      document.getElementById('confirmModal').style.display = 'none';
+    }
+
+    function showSimpleConfirm(title, message, callback) {
+      document.getElementById('simpleConfirmTitle').textContent = title;
+      document.getElementById('simpleConfirmMessage').innerHTML = message;
+      currentSimpleConfirmCallback = callback;
+      document.getElementById('simpleConfirmModal').style.display = 'flex';
+    }
+
+    function closeSimpleConfirmModal() {
+      document.getElementById('simpleConfirmModal').style.display = 'none';
+    }
+
     // ====================== CONTRACT TYPE ======================
     function setContractType(type) {
       currentContractType = type;
@@ -1038,7 +1061,7 @@
       document.getElementById('historyNoteModal').style.display = 'none';
     }
 
-    // ====================== LỊCH XE (GIỮ NGUYÊN) ======================
+    // ====================== LỊCH XE ======================
     function renderCalendar(carId) {
       currentScheduleCarId = carId;
       const booked = new Set();
@@ -1498,7 +1521,7 @@
       document.getElementById('extraFeesList').innerHTML = '';
 
       document.getElementById('rentTime').value = '08:00';
-      document.getElementById('returnTime').value = '18:00';
+      document.getElementById('returnTime').value = '20:00';
       document.getElementById('rentDayType').value = 'cungngay';
       document.getElementById('discount').value = '0';
 
@@ -1563,7 +1586,7 @@
       document.getElementById('rentDate').value = contract.rentDate || '';
       document.getElementById('returnDate').value = contract.returnDate || '';
       document.getElementById('rentTime').value = contract.rentTime || '08:00';
-      document.getElementById('returnTime').value = contract.returnTime || '18:00';
+      document.getElementById('returnTime').value = contract.returnTime || '20:00';
       document.getElementById('rentDayType').value = contract.rentDayType || 'cungngay';
       document.getElementById('status').value = contract.status || 'Chưa nhận xe';
 
@@ -1852,7 +1875,7 @@
         closeSimpleConfirmModal();
       });
 
-      console.log("🚀 CarRent v1.2.4 - Giá Đặt qua app là giá tổng thuê xe");
+      console.log("🚀 CarRent v1.2.4 FIXED - Nút Nhận xe & Hủy đã hoạt động bình thường");
     };
 
     function formatPriceInput(e) {
