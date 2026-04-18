@@ -102,7 +102,16 @@
       color: var(--primary-dark);
       font-weight: 600;
     }
-    tr:hover { background: #f1f5f9; cursor: pointer; }
+
+    /* Màu nền theo trạng thái */
+    tr.waiting-today { background: #dbeafe !important; }   /* Xanh dương - chờ nhận hôm nay */
+    tr.due-today     { background: #fef3c7 !important; }   /* Vàng - đến hạn trả hôm nay */
+    tr.overdue       { background: #fee2e2 !important; }   /* Đỏ - quá hạn trả */
+
+    tr:hover { 
+      background: #f1f5f9 !important; 
+      cursor: pointer; 
+    }
 
     .status {
       padding: 6px 12px;
@@ -441,76 +450,16 @@
       opacity: 0.75;
     }
 
-    .dashboard-section {
-      background: white;
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
-      margin-bottom: 25px;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 18px;
-    }
-    .upcoming-header { color: var(--primary-dark); }
-    .returning-header { color: #c2410c; }
-
-    .section-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-      gap: 16px;
-    }
-
-    .upcoming-card { border: 2px solid #e0f2fe; }
-    .returning-card { border: 2px solid #fed7aa; background: #fffbeb; }
-    .overdue-card { border: 2px solid #fecaca; background: #fef2f2; }
-
-    .upcoming-card, .returning-card, .overdue-card {
-      border-radius: 16px;
-      padding: 18px;
-      transition: all 0.3s ease;
-    }
-    .upcoming-card:hover { border-color: var(--primary); box-shadow: 0 8px 25px rgba(37,99,235,0.15); }
-    .returning-card:hover { border-color: #f59e0b; box-shadow: 0 8px 25px rgba(245,158,11,0.15); }
-    .overdue-card:hover { border-color: #dc2626; box-shadow: 0 8px 25px rgba(220,38,38,0.15); }
-
-    .overdue-badge {
-      background: #dc2626;
-      color: white;
-      padding: 5px 14px;
-      border-radius: 9999px;
-      font-size: 0.82rem;
-      font-weight: 700;
-      display: inline-block;
-      margin-bottom: 10px;
-    }
-
-    .upcoming-time, .returning-time {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-
-    .remain-money {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: #ea580c;
-    }
-
     @media (max-width: 600px) {
       body { padding: 10px; padding-bottom: 140px; }
       h1 { font-size: 2.2rem; }
       .fab { width: 55px; height: 55px; bottom: 20px; right: 20px; }
       .action-buttons { bottom: 20px; right: 88px; gap: 10px; }
       .action-btn { width: 48px; height: 48px; font-size: 1.25rem; }
-      .section-grid { grid-template-columns: 1fr; }
     }
 
     @media print {
-      .tabs, .fab, .action-buttons, header, .modal, .action-popup, .dashboard-section, .btn:not(.print-only) { display: none !important; }
+      .tabs, .fab, .action-buttons, header, .modal, .action-popup { display: none !important; }
       #tab2 { display: block !important; box-shadow: none; }
       .table-container { overflow: visible; }
     }
@@ -536,24 +485,6 @@
         <button class="btn btn-primary" onclick="showAddContractModal()">
           <i class="fas fa-plus"></i> Thêm hợp đồng
         </button>
-      </div>
-
-      <!-- Nhận xe hôm nay -->
-      <div id="upcomingSection" class="dashboard-section" style="display: none;">
-        <div class="section-header upcoming-header">
-          <i class="fas fa-clock" style="font-size:1.7rem;"></i>
-          <h3>Nhận xe hôm nay</h3>
-        </div>
-        <div id="upcomingGrid" class="section-grid"></div>
-      </div>
-
-      <!-- Xe đến hạn trả -->
-      <div id="returningSection" class="dashboard-section" style="display: none;">
-        <div class="section-header returning-header">
-          <i class="fas fa-clock" style="font-size:1.7rem;"></i>
-          <h3>Xe đến hạn trả <small style="color:#64748b; font-weight:normal;"></small></h3>
-        </div>
-        <div id="returningGrid" class="section-grid"></div>
       </div>
 
       <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
@@ -966,13 +897,13 @@
   </div>
 
   <div class="version">
-    CarRent v1.2.9 (2026)
+    CarRent v1.3.0 (2026)
   </div>
 
 <script>
 // ==================== CẤU HÌNH ====================
 const MASTER_KEY = "$2a$10$w8HuZEOH5lKslhwqq1vyc.pW/hNhvuAzCkMse5cgH4R9cX.n27ISO";
-const BIN_ID = "69cbce71856a682189e72759";
+const BIN_ID = "69cbd91436566621a866f521";
 
 let cars = [], contracts = [];
 let holidays = ["2026-01-01", "2026-04-25","2026-04-26","2026-04-27", "2026-04-28","2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02","2026-05-03","2026-09-02"];
@@ -1471,182 +1402,40 @@ function addExtraFeeField() {
   container.appendChild(row);
 }
 
-// ====================== NHẬN XE - LOGIC ĐÃ SỬA ĐÚNG ======================
+// ====================== LOGIC NGÀY (giữ nguyên v1.2.9) ======================
 function getRealReceiveDate(contract) {
   let date = new Date(contract.rentDate);
   if (contract.rentDayType === "homtruoc") {
-    date.setDate(date.getDate() - 1);  // Trừ đúng 1 ngày
+    date.setDate(date.getDate() - 1);
   }
   return date;
 }
 
-function getUpcomingContracts() {
+function isReceiveToday(contract) {
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  return contracts
-    .filter(c => c.status === "Chưa nhận xe")
-    .map(c => ({
-      ...c,
-      realReceiveDate: getRealReceiveDate(c)
-    }))
-    .filter(c => {
-      const d = new Date(c.realReceiveDate);
-      d.setHours(0, 0, 0, 0);
-      return d.getTime() === today.getTime();
-    })
-    .sort((a, b) => (a.rentTime || '00:00').localeCompare(b.rentTime || '00:00'));
+  today.setHours(0,0,0,0);
+  const realDate = getRealReceiveDate(contract);
+  realDate.setHours(0,0,0,0);
+  return realDate.getTime() === today.getTime();
 }
 
-function renderUpcomingSection() {
-  const container = document.getElementById('upcomingSection');
-  const grid = document.getElementById('upcomingGrid');
-  grid.innerHTML = '';
-
-  const upcoming = getUpcomingContracts();
-
-  if (upcoming.length === 0) {
-    container.style.display = 'none';
-    return;
-  }
-
-  container.style.display = 'block';
-
-  upcoming.forEach(contract => {
-    const remain = calculateRemaining(contract);
-    const realDate = getRealReceiveDate(contract);
-    const displayDate = formatDate(realDate.toISOString().split('T')[0]);
-
-    const div = document.createElement('div');
-    div.className = 'upcoming-card';
-    div.innerHTML = `
-      <div class="upcoming-time">
-        Hôm nay - ${displayDate} ${contract.rentTime || '08:00'}
-      </div>
-      <div>
-        <strong>${contract.customer}</strong><br>
-        📱 ${contract.phone}<br>
-        🚗 ${contract.carType} - ${contract.plate}
-      </div>
-      <div style="margin:12px 0 16px 0;">
-        <span class="remain-money">Còn phải thu: ${formatMoney(remain)} ₫</span>
-      </div>
-      <button onclick="quickReceiveContract(${contract.id}); event.stopImmediatePropagation();" 
-              class="btn btn-success" style="width:100%; padding:14px;">
-        <i class="fas fa-car"></i> Nhận xe ngay
-      </button>
-    `;
-    grid.appendChild(div);
-  });
-}
-
-function quickReceiveContract(id) {
-  if (document.getElementById('actionPopup').style.display === 'flex') closeActionPopup();
-  confirmReceive(id);
-}
-
-// ====================== TRẢ XE ======================
-function getReturningContracts() {
+function isReturnToday(contract) {
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  return contracts
-    .filter(c => c.status === "Đang thuê")
-    .map(c => ({
-      ...c,
-      realReturnDate: new Date(c.returnDate),
-      isOverdue: false
-    }))
-    .filter(c => {
-      const returnDay = new Date(c.realReturnDate);
-      returnDay.setHours(0, 0, 0, 0);
-      return returnDay.getTime() <= today.getTime();
-    })
-    .map(c => {
-      const returnDay = new Date(c.realReturnDate);
-      returnDay.setHours(0, 0, 0, 0);
-      c.isOverdue = returnDay.getTime() < today.getTime();
-      return c;
-    })
-    .sort((a, b) => {
-      if (a.isOverdue !== b.isOverdue) return a.isOverdue ? -1 : 1;
-      return (a.returnTime || '00:00').localeCompare(b.returnTime || '00:00');
-    });
-}
-
-function getReturnDisplay(contract) {
+  today.setHours(0,0,0,0);
   const retDate = new Date(contract.returnDate);
+  retDate.setHours(0,0,0,0);
+  return retDate.getTime() === today.getTime();
+}
+
+function isOverdue(contract) {
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const isOverdue = retDate < today;
-  let label = isOverdue ? "Quá hạn" : "Hôm nay";
-  return {
-    fullDisplay: `${label} - ${formatDate(contract.returnDate)} ${contract.returnTime || '20:00'}`,
-    isOverdue: isOverdue
-  };
+  today.setHours(0,0,0,0);
+  const retDate = new Date(contract.returnDate);
+  retDate.setHours(0,0,0,0);
+  return retDate.getTime() < today.getTime() && contract.status === "Đang thuê";
 }
 
-function renderReturningSection() {
-  const container = document.getElementById('returningSection');
-  const grid = document.getElementById('returningGrid');
-  grid.innerHTML = '';
-
-  const returning = getReturningContracts();
-
-  if (returning.length === 0) {
-    container.style.display = 'none';
-    return;
-  }
-
-  container.style.display = 'block';
-
-  returning.forEach(contract => {
-    const display = getReturnDisplay(contract);
-    const remain = calculateRemaining(contract);
-
-    const div = document.createElement('div');
-    div.className = contract.isOverdue ? 'overdue-card' : 'returning-card';
-
-    let overdueTag = '';
-    if (contract.isOverdue) {
-      const daysLate = Math.ceil((new Date() - new Date(contract.returnDate)) / 86400000);
-      overdueTag = `<div class="overdue-badge">QUÁ HẠN (${daysLate} ngày)</div>`;
-    }
-
-    div.innerHTML = `
-      ${overdueTag}
-      <div class="returning-time">
-       </i> ${display.fullDisplay}
-      </div>
-      <div class="returning-info">
-        <strong onclick="showActionPopup(${contract.id}); event.stopImmediatePropagation();" 
-                style="cursor:pointer; color:#1f2937;">
-          ${contract.customer}
-        </strong><br>
-        📱 ${contract.phone}<br>
-        🚗 ${contract.carType} - ${contract.plate}
-      </div>
-      <div style="margin:12px 0 16px 0;">
-        <span style="font-size:1.15rem; font-weight:700; color:${contract.isOverdue ? '#dc2626' : '#c2410c'};">
-          Còn phải thu: ${formatMoney(remain)} ₫
-        </span>
-      </div>
-      <button onclick="quickReturnContract(${contract.id}); event.stopImmediatePropagation();" 
-              class="btn ${contract.isOverdue ? 'btn-danger' : 'btn-info'}" style="width:100%; padding:14px;">
-        <i class="fas fa-undo"></i> ${contract.isOverdue ? 'Trả xe (Quá hạn)' : 'Trả xe ngay'}
-      </button>
-    `;
-    grid.appendChild(div);
-  });
-}
-
-function quickReturnContract(id) {
-  if (document.getElementById('actionPopup').style.display === 'flex') closeActionPopup();
-  confirmReturn(id);
-}
-
-// ====================== RENDER ======================
+// ====================== RENDER ACTIVE CONTRACTS ======================
 function renderActiveContracts() {
   const tbody = document.getElementById('activeContractBody');
   tbody.innerHTML = '';
@@ -1698,6 +1487,16 @@ function renderActiveContracts() {
 
     const tr = document.createElement('tr');
     tr.onclick = () => showActionPopup(contract.id);
+
+    let rowClass = '';
+    if (contract.status === "Chưa nhận xe" && isReceiveToday(contract)) {
+      rowClass = 'waiting-today';
+    } else if (contract.status === "Đang thuê") {
+      if (isOverdue(contract)) rowClass = 'overdue';
+      else if (isReturnToday(contract)) rowClass = 'due-today';
+    }
+    tr.className = rowClass;
+
     tr.innerHTML = `
       <td><strong>${contract.customer || ''}</strong></td>
       <td>${contract.phone || ''}</td>
@@ -1929,8 +1728,6 @@ function renderAll() {
   renderActiveContracts();
   renderCars();
   renderCompletedContracts();
-  renderUpcomingSection();
-  renderReturningSection();
 }
 
 function switchTab(tab) {
@@ -2299,7 +2096,7 @@ window.onload = async () => {
     if (e.target === this) closeActionPopup();
   });
 
-  console.log("🚀 CarRent v1.2.9 - Logic nhận xe tối hôm trước đã được sửa đúng theo yêu cầu!");
+  console.log("🚀 CarRent v1. - Đã bỏ dashboard và áp dụng màu nền theo yêu cầu!");
 };
 
 function formatPriceInput(e) {
