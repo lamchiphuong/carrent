@@ -678,6 +678,60 @@ body.pro-mode #actionPopup {
   cursor: pointer;
 }
 .logout-btn:hover { background: #fee2e2; }
+
+/* ===== LOGIN METHOD TABS ===== */
+.login-method-tabs {
+  display: flex;
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 22px;
+}
+.login-method-tab {
+  flex: 1;
+  text-align: center;
+  padding: 9px 6px;
+  border-radius: 9px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.login-method-tab.active {
+  background: white;
+  color: var(--primary);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.login-panel { display: none; text-align: left; }
+.login-panel.active { display: block; }
+.login-panel input {
+  margin-bottom: 12px;
+}
+.login-panel .btn {
+  width: 100%;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.login-link-row {
+  text-align: center;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+.login-link-row a {
+  color: var(--primary);
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+}
+.login-link-row a:hover { text-decoration: underline; }
+.otp-hint {
+  font-size: 0.82rem;
+  color: var(--gray);
+  margin-bottom: 12px;
+  text-align: center;
+}
+#recaptcha-container { display: flex; justify-content: center; margin-bottom: 8px; }
   </style>
 </head>
 <body>
@@ -687,12 +741,55 @@ body.pro-mode #actionPopup {
     <div class="login-box">
       <h1><i class="fas fa-car"></i> CarRent</h1>
       <p class="subtitle">Quản lý thuê xe thông minh</p>
-      <button class="google-btn" id="googleLoginBtn" onclick="signInWithGoogle()">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
-        Đăng nhập bằng Google
-      </button>
+
+      <div class="login-method-tabs">
+        <div class="login-method-tab active" id="tabGoogle" onclick="switchLoginTab('google')">Google</div>
+        <div class="login-method-tab" id="tabEmail" onclick="switchLoginTab('email')">Email</div>
+        <div class="login-method-tab" id="tabPhone" onclick="switchLoginTab('phone')">SĐT</div>
+      </div>
+
+      <!-- ==== TAB GOOGLE ==== -->
+      <div class="login-panel active" id="loginPanelGoogle">
+        <button class="google-btn" id="googleLoginBtn" onclick="signInWithGoogle()">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+          Đăng nhập bằng Google
+        </button>
+      </div>
+
+      <!-- ==== TAB EMAIL ==== -->
+      <div class="login-panel" id="loginPanelEmail">
+        <input type="email" id="emailInput" placeholder="Email" autocomplete="email">
+        <input type="password" id="passwordInput" placeholder="Mật khẩu" autocomplete="current-password">
+        <button class="btn btn-primary" onclick="signInWithEmail()">
+          <i class="fas fa-sign-in-alt"></i> Đăng nhập
+        </button>
+        <button class="btn btn-secondary" onclick="registerWithEmail()">
+          <i class="fas fa-user-plus"></i> Tạo tài khoản mới
+        </button>
+        <div class="login-link-row"><a onclick="resetPassword()">Quên mật khẩu?</a></div>
+      </div>
+
+      <!-- ==== TAB SỐ ĐIỆN THOẠI ==== -->
+      <div class="login-panel" id="loginPanelPhone">
+        <div id="phoneStep1">
+          <input type="tel" id="phoneInput" placeholder="Số điện thoại (VD: 0912345678)" autocomplete="tel">
+          <button class="btn btn-primary" onclick="sendOTP()">
+            <i class="fas fa-paper-plane"></i> Gửi mã OTP
+          </button>
+        </div>
+        <div id="phoneStep2" style="display:none;">
+          <div class="otp-hint">Nhập mã OTP đã gửi tới số điện thoại của bạn</div>
+          <input type="text" id="otpInput" placeholder="Mã OTP" inputmode="numeric" maxlength="6">
+          <button class="btn btn-primary" onclick="verifyOTP()">
+            <i class="fas fa-check"></i> Xác nhận
+          </button>
+          <div class="login-link-row"><a onclick="backToPhoneStep1()">Dùng số khác / Gửi lại mã</a></div>
+        </div>
+        <div id="recaptcha-container"></div>
+      </div>
+
       <div class="login-loading" id="loginLoading">
-        <i class="fas fa-spinner fa-spin"></i> Đang đăng nhập...
+        <i class="fas fa-spinner fa-spin"></i> Đang xử lý...
       </div>
       <div class="login-error" id="loginError"></div>
     </div>
@@ -1403,6 +1500,192 @@ function signOutUser() {
     if (dataRef) dataRef.off();
     auth.signOut();
   }
+}
+
+// ==================== AUTH: CHUYỂN TAB PHƯƠNG THỨC ĐĂNG NHẬP ====================
+function switchLoginTab(tab) {
+  document.getElementById('loginError').style.display = 'none';
+
+  document.getElementById('tabGoogle').classList.toggle('active', tab === 'google');
+  document.getElementById('tabEmail').classList.toggle('active', tab === 'email');
+  document.getElementById('tabPhone').classList.toggle('active', tab === 'phone');
+
+  document.getElementById('loginPanelGoogle').classList.toggle('active', tab === 'google');
+  document.getElementById('loginPanelEmail').classList.toggle('active', tab === 'email');
+  document.getElementById('loginPanelPhone').classList.toggle('active', tab === 'phone');
+}
+
+function showLoginError(error) {
+  const errorBox = document.getElementById('loginError');
+  const messages = {
+    'auth/invalid-email': 'Email không hợp lệ.',
+    'auth/user-not-found': 'Tài khoản không tồn tại.',
+    'auth/wrong-password': 'Sai mật khẩu.',
+    'auth/invalid-credential': 'Email hoặc mật khẩu không đúng.',
+    'auth/email-already-in-use': 'Email này đã được đăng ký.',
+    'auth/weak-password': 'Mật khẩu cần ít nhất 6 ký tự.',
+    'auth/invalid-phone-number': 'Số điện thoại không hợp lệ.',
+    'auth/too-many-requests': 'Bạn thử quá nhiều lần, vui lòng chờ rồi thử lại.',
+    'auth/invalid-verification-code': 'Mã OTP không đúng.',
+    'auth/code-expired': 'Mã OTP đã hết hạn, vui lòng gửi lại.'
+  };
+  errorBox.textContent = messages[error.code] || ("Lỗi: " + (error.message || error.code));
+  errorBox.style.display = 'block';
+}
+
+function setLoginBusy(isBusy) {
+  document.getElementById('loginLoading').style.display = isBusy ? 'block' : 'none';
+  document.querySelectorAll('.login-box button').forEach(b => b.disabled = isBusy);
+}
+
+// ==================== AUTH: ĐĂNG NHẬP / ĐĂNG KÝ BẰNG EMAIL ====================
+function signInWithEmail() {
+  const email = document.getElementById('emailInput').value.trim();
+  const password = document.getElementById('passwordInput').value;
+  document.getElementById('loginError').style.display = 'none';
+
+  if (!email || !password) {
+    document.getElementById('loginError').textContent = 'Vui lòng nhập đầy đủ email và mật khẩu.';
+    document.getElementById('loginError').style.display = 'block';
+    return;
+  }
+
+  setLoginBusy(true);
+  auth.signInWithEmailAndPassword(email, password)
+    .catch(showLoginError)
+    .finally(() => setLoginBusy(false));
+}
+
+function registerWithEmail() {
+  const email = document.getElementById('emailInput').value.trim();
+  const password = document.getElementById('passwordInput').value;
+  document.getElementById('loginError').style.display = 'none';
+
+  if (!email || !password) {
+    document.getElementById('loginError').textContent = 'Vui lòng nhập đầy đủ email và mật khẩu.';
+    document.getElementById('loginError').style.display = 'block';
+    return;
+  }
+  if (password.length < 6) {
+    document.getElementById('loginError').textContent = 'Mật khẩu cần ít nhất 6 ký tự.';
+    document.getElementById('loginError').style.display = 'block';
+    return;
+  }
+
+  setLoginBusy(true);
+  auth.createUserWithEmailAndPassword(email, password)
+    .catch(showLoginError)
+    .finally(() => setLoginBusy(false));
+}
+
+function resetPassword() {
+  const email = document.getElementById('emailInput').value.trim();
+  const errorBox = document.getElementById('loginError');
+  errorBox.style.display = 'none';
+
+  if (!email) {
+    errorBox.textContent = 'Vui lòng nhập email vào ô Email trước, rồi bấm "Quên mật khẩu?".';
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  setLoginBusy(true);
+  auth.sendPasswordResetEmail(email)
+    .then(() => {
+      errorBox.style.color = '#16a34a';
+      errorBox.textContent = 'Đã gửi email đặt lại mật khẩu, vui lòng kiểm tra hộp thư.';
+      errorBox.style.display = 'block';
+    })
+    .catch((error) => {
+      errorBox.style.color = '';
+      showLoginError(error);
+    })
+    .finally(() => setLoginBusy(false));
+}
+
+// ==================== AUTH: ĐĂNG NHẬP BẰNG SỐ ĐIỆN THOẠI (OTP) ====================
+let confirmationResult = null;
+
+function setupRecaptcha() {
+  if (!window.recaptchaVerifier) {
+    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+      size: 'invisible'
+    });
+  }
+  return window.recaptchaVerifier;
+}
+
+function normalizePhone(raw) {
+  let phone = raw.trim().replace(/[\s().-]/g, '');
+  if (phone.startsWith('0')) {
+    phone = '+84' + phone.slice(1); // Việt Nam: đổi 0xxx -> +84xxx
+  } else if (!phone.startsWith('+')) {
+    phone = '+84' + phone;
+  }
+  return phone;
+}
+
+function sendOTP() {
+  const rawPhone = document.getElementById('phoneInput').value.trim();
+  const errorBox = document.getElementById('loginError');
+  errorBox.style.display = 'none';
+
+  if (!rawPhone) {
+    errorBox.textContent = 'Vui lòng nhập số điện thoại.';
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  const phone = normalizePhone(rawPhone);
+  const verifier = setupRecaptcha();
+
+  setLoginBusy(true);
+  auth.signInWithPhoneNumber(phone, verifier)
+    .then((result) => {
+      confirmationResult = result;
+      document.getElementById('phoneStep1').style.display = 'none';
+      document.getElementById('phoneStep2').style.display = 'block';
+    })
+    .catch((error) => {
+      showLoginError(error);
+      // Reset reCAPTCHA để có thể thử lại
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.render().then((widgetId) => {
+          if (window.grecaptcha) window.grecaptcha.reset(widgetId);
+        });
+      }
+    })
+    .finally(() => setLoginBusy(false));
+}
+
+function verifyOTP() {
+  const code = document.getElementById('otpInput').value.trim();
+  const errorBox = document.getElementById('loginError');
+  errorBox.style.display = 'none';
+
+  if (!code) {
+    errorBox.textContent = 'Vui lòng nhập mã OTP.';
+    errorBox.style.display = 'block';
+    return;
+  }
+  if (!confirmationResult) {
+    errorBox.textContent = 'Vui lòng gửi lại mã OTP.';
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  setLoginBusy(true);
+  confirmationResult.confirm(code)
+    .catch(showLoginError)
+    .finally(() => setLoginBusy(false));
+}
+
+function backToPhoneStep1() {
+  document.getElementById('phoneStep1').style.display = 'block';
+  document.getElementById('phoneStep2').style.display = 'none';
+  document.getElementById('otpInput').value = '';
+  document.getElementById('loginError').style.display = 'none';
+  confirmationResult = null;
 }
 
 // Theo dõi trạng thái đăng nhập
