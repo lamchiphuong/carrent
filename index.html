@@ -648,34 +648,96 @@ body.pro-mode #actionPopup {
 }
 .app-hidden { display: none !important; }
 
-.user-bar {
+/* ===== PROFILE BUTTON + DROPDOWN ===== */
+.profile-menu-wrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 18px;
+}
+.profile-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  background: white;
+  box-shadow: 0 4px 14px rgba(37,99,235,0.25);
+  transition: all 0.2s ease;
+}
+.profile-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(37,99,235,0.35);
+}
+.profile-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+.profile-dropdown {
+  display: none;
+  position: absolute;
+  top: 52px;
+  left: 0;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 14px 35px rgba(0,0,0,0.18);
+  padding: 16px;
+  min-width: 250px;
+  z-index: 1500;
+  animation: profileDropIn 0.18s ease;
+}
+.profile-dropdown.show { display: block; }
+@keyframes profileDropIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.profile-dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.profile-dropdown-header img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  flex-shrink: 0;
+  object-fit: cover;
+}
+.profile-dropdown-name {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 0.95rem;
+  word-break: break-word;
+}
+.profile-dropdown-email {
+  color: #64748b;
+  font-size: 0.82rem;
+  margin-top: 2px;
+  word-break: break-all;
+}
+.logout-btn {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: none;
+  background: #fef2f2;
+  color: var(--danger);
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-}
-.user-bar img {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 2px solid var(--primary);
-}
-.user-bar .user-name {
-  font-weight: 600;
-  color: #334155;
-  font-size: 0.92rem;
-}
-.logout-btn {
-  padding: 6px 14px;
-  border-radius: 50px;
-  border: none;
-  background: #f1f5f9;
-  color: var(--danger);
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
+  gap: 6px;
+  transition: all 0.2s ease;
 }
 .logout-btn:hover { background: #fee2e2; }
 
@@ -769,15 +831,26 @@ body.pro-mode #actionPopup {
   </div>
 
   <div class="container app-hidden" id="appContainer">
-    <div class="user-bar" id="userBar" style="display:none;">
-      <img id="userAvatar" src="" alt="">
-      <span class="user-name" id="userNameLabel"></span>
-      <button class="logout-btn" onclick="signOutUser()"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
-    </div>
     <header>
       <h1><i class="fas fa-car"></i> CarRent</h1>
       <p class="subtitle">Quản lý thuê xe thông minh</p>
     </header>
+
+    <div class="profile-menu-wrap" id="profileMenuWrap" style="display:none;">
+      <button class="profile-btn" id="profileBtn" onclick="toggleProfileDropdown(event)" title="Tài khoản">
+        <img id="userAvatar" src="" alt="Avatar">
+      </button>
+      <div class="profile-dropdown" id="profileDropdown">
+        <div class="profile-dropdown-header">
+          <img id="profileDropdownAvatar" src="" alt="Avatar">
+          <div>
+            <div class="profile-dropdown-name" id="profileDropdownName"></div>
+            <div class="profile-dropdown-email" id="profileDropdownEmail"></div>
+          </div>
+        </div>
+        <button class="logout-btn" onclick="signOutUser()"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+      </div>
+    </div>
 
   <div class="tabs">
     <div class="tab active" onclick="switchTab(0)">📋 Hợp đồng đang xử lý</div>
@@ -1606,7 +1679,7 @@ function resetPassword() {
 auth.onAuthStateChanged((user) => {
   const loginScreen = document.getElementById('loginScreen');
   const appContainer = document.getElementById('appContainer');
-  const userBar = document.getElementById('userBar');
+  const profileMenuWrap = document.getElementById('profileMenuWrap');
 
   if (user) {
     currentUser = user;
@@ -1622,10 +1695,14 @@ auth.onAuthStateChanged((user) => {
       lastLogin: new Date().toISOString()
     });
 
-    // Hiện thanh thông tin user
-    document.getElementById('userAvatar').src = user.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-    document.getElementById('userNameLabel').textContent = user.displayName || user.email || 'Người dùng';
-    userBar.style.display = 'flex';
+    // Hiện nút profile (chỉ avatar) + điền dữ liệu vào dropdown
+    const avatarUrl = user.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+    const displayName = user.displayName || user.email || 'Người dùng';
+    document.getElementById('userAvatar').src = avatarUrl;
+    document.getElementById('profileDropdownAvatar').src = avatarUrl;
+    document.getElementById('profileDropdownName').textContent = displayName;
+    document.getElementById('profileDropdownEmail').textContent = user.email || '';
+    profileMenuWrap.style.display = 'inline-block';
 
     loginScreen.classList.add('hidden');
     appContainer.classList.remove('app-hidden');
@@ -1636,8 +1713,24 @@ auth.onAuthStateChanged((user) => {
     dataRef = null;
     loginScreen.classList.remove('hidden');
     appContainer.classList.add('app-hidden');
-    userBar.style.display = 'none';
+    profileMenuWrap.style.display = 'none';
+    closeProfileDropdown();
   }
+});
+
+// ==================== MENU PROFILE (avatar dropdown) ====================
+function toggleProfileDropdown(e) {
+  if (e) e.stopPropagation();
+  const dropdown = document.getElementById('profileDropdown');
+  if (dropdown) dropdown.classList.toggle('show');
+}
+function closeProfileDropdown() {
+  const dropdown = document.getElementById('profileDropdown');
+  if (dropdown) dropdown.classList.remove('show');
+}
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('profileMenuWrap');
+  if (wrap && !wrap.contains(e.target)) closeProfileDropdown();
 });
 
 // ==================== BIẾN TOÀN CỤC ====================
